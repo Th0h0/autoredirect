@@ -6,11 +6,11 @@ CANARY_TEXT = 'CANARY049'
 CANARY_DOMAIN = 'canaryredirect.fr'
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--file", "-f", type=str, required=False, help= 'File of all URLs to be tested against Open Redirect.')
-parser.add_argument("--url", "-u", type=str, required=False, help= 'Url to be tested against Open Redirect.')
-parser.add_argument("--verbose", "-v", action='store_true', help='Activate verbose mode for the tool.')
-parser.add_argument("--smart", "-s", action='store_true', help='Activate context-based payload generation for each tested URL.')
-
+parser.add_argument("--file", "-f", type=str, required=False, help= 'file of all URLs to be tested against Open Redirect')
+parser.add_argument("--url", "-u", type=str, required=False, help= 'url to be tested against Open Redirect.')
+parser.add_argument("--verbose", "-v", action='store_true', help='activate verbose mode for the tool')
+parser.add_argument("--smart", "-s", action='store_true', help='activate context-based payload generation for each tested URL')
+parser.add_argument("--output", "-o", action='store_true', help='output file path')
 
 args = parser.parse_args()
 
@@ -24,7 +24,11 @@ regexMultipleParams = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|de
 
 regexSingleParam = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|destination|dir|domain|feed|file|file_name|folder|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|page|path|port|redir|redirect|redirect_to|uri|URI|Uri|reference|return|returnTo|return_path|return_to|rt|show|site|target|to|url|val|validate|view|window)=)(.*)'
 
-output = open("open-redirect-output.txt", "w")
+if args.output:
+    output = open(args.output, "w")
+else:
+    output = open("open-redirect-output.txt", "w")
+
 
 def smart_extract_host(url, matchedElement):
     urlDecodedElem = requests.utils.unquote(matchedElement)
