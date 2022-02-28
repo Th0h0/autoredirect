@@ -39,9 +39,14 @@ if args.output:
 else:
     output = open("open-redirect-output.txt", "w")
 
-def exception_verbose_message(exception):
-    if args.verbose and exception == requests.exceptions.Timeout:
+def exception_verbose_message(exceptionType):
+    if args.verbose:
+        if exceptionType == "timeout":
             print("Timeout detected... URL skipped")
+        elif exceptionType == "redirects":
+            print("Too many redirects... URL skipped")
+        elif exceptionType == "others":
+            print("Request error... URL skipped")
 
 def smart_extract_host(url, matchedElement):
     urlDecodedElem = requests.utils.unquote(matchedElement)
@@ -116,8 +121,12 @@ def main():
         for url in targetURLS:
             try:
                 fuzz_open_redirect(url)
-            except Exception as e:
-                exception_verbose_message(e)
-                continue
+            except requests.exceptions.Timeout:
+                exception_verbose_message("timeout")
+            except requests.exceptions.TooManyRedirects:
+                exception_verbose_message("redirects")
+            except requests.exceptions.RequestException:
+                exception_verbose_message("others")
+
         targetURLS.close()
 main()
