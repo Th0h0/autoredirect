@@ -95,9 +95,13 @@ def main():
         except:
             print("\nInvalid URL")
     elif args.file:
-        for url in args.file:
+
+        targetURLS = open(args.file, "r")
+
+        for url in targetURLS:
             try:
                 fuzz_open_redirect(url)
             except:
                 continue
+        targetURLS.close()
 main()
