@@ -4,7 +4,7 @@ import requests
 
 CANARY_TEXT = 'CANARY049'
 CANARY_DOMAIN = 'canaryredirect.fr'
-FUZZ_PLACE_HOLDER = 'FUZZ-HERE'
+FUZZ_PLACE_HOLDER = '??????'
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--file", "-f", type=str, required=False, help= 'file of all URLs to be tested against Open Redirect')
@@ -66,26 +66,27 @@ def generate_payloads(whitelistedHost):
     return generated
 
 def fuzz_open_redirect(url, payloadsList = payloads):
-    matching = regex.search(regexMultipleParams, url, regex.IGNORECASE)
-    matchedElem = matching if matching else regex.search(regexSingleParam, url, regex.IGNORECASE)
-    if not matchedElem:
-        return
-    matchedElem = matchedElem.group()
+
+    replacedURL = regex.sub(regexMultipleParams, FUZZ_PLACE_HOLDER, url, flags=regex.IGNORECASE)
+    if replacedURL == url: #If no match with multiparam regex
+        replacedURL = regex.sub(regexSingleParam, FUZZ_PLACE_HOLDER, url, flags=regex.IGNORECASE)
+        matchedElem = regex.search(regexSingleParam, url, regex.IGNORECASE).group()
+    else:
+        matchedElem = regex.search(regexMultipleParams, url, regex.IGNORECASE).group()
 
     if args.smart:
-        host = smart_extract_host(url , matchedElem)
+        host = smart_extract_host(url, matchedElem)
         payloadsList += generate_payloads(host)
 
-    url = url.replace(matchedElem, FUZZ_PLACE_HOLDER)
 
     if args.verbose:
         print(f" + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +")
-        print(f"Starting fuzzing {url}")
+        print(f"Starting fuzzing {replacedURL}")
 
     for payload in payloadsList:
-        if detected_vuln_with_payload(url, payload):
-            print(f"Open Redirect detected in {url} with payload {payload}.")
-            output.write(f"Open Redirect detected in {url} with payload {payload}\n")
+        if detected_vuln_with_payload(replacedURL, payload):
+            print(f"Open Redirect detected in {replacedURL} with payload {payload}.")
+            output.write(f"Open Redirect detected in {replacedURL} with payload {payload}\n")
             return
     if args.verbose:
         print("\nNothing detected for the given URL.\n")
