@@ -42,11 +42,11 @@ else:
 def exception_verbose_message(exceptionType):
     if args.verbose:
         if exceptionType == "timeout":
-            print("\Timeout detected... URL skipped")
+            print("\nTimeout detected... URL skipped")
         elif exceptionType == "redirects":
-            print("\Too many redirects... URL skipped")
+            print("\nToo many redirects... URL skipped")
         elif exceptionType == "others":
-            print("\Request error... URL skipped")
+            print("\nRequest error... URL skipped")
 
 def smart_extract_host(url, matchedElement):
     urlDecodedElem = requests.utils.unquote(matchedElement)
