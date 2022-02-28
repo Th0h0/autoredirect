@@ -5,6 +5,7 @@ import requests
 CANARY_TEXT = 'CANARY049'
 CANARY_DOMAIN = 'canaryredirect.fr'
 FUZZ_PLACE_HOLDER = '??????'
+TIMEOUT_DELAY = 1.75
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--file", "-f", type=str, required=False, help= 'file of all URLs to be tested against Open Redirect')
@@ -38,6 +39,9 @@ if args.output:
 else:
     output = open("open-redirect-output.txt", "w")
 
+def exception_verbose_message(exception):
+    if args.verbose and exception == requests.exceptions.Timeout:
+            print("Timeout detected... URL skipped")
 
 def smart_extract_host(url, matchedElement):
     urlDecodedElem = requests.utils.unquote(matchedElement)
@@ -96,7 +100,7 @@ def detected_vuln_with_payload(url, payload):
 
     if args.verbose:
         print(f"Testing payload: {payload}                                                          ", end="\r")
-    response = requests.get(fuzzedUrl)
+    response = requests.get(fuzzedUrl, timeout=TIMEOUT_DELAY)
     return (CANARY_TEXT in response.text)
 
 def main():
@@ -112,7 +116,8 @@ def main():
         for url in targetURLS:
             try:
                 fuzz_open_redirect(url)
-            except:
+            except Exception as e:
+                exception_verbose_message(e)
                 continue
         targetURLS.close()
 main()
