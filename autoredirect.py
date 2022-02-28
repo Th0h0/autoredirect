@@ -29,9 +29,9 @@ if args.oneshot:
 else:
     payloads = [payload.replace('\n', '') for payload in defaultPayloadFile]
 
-regexMultipleParams = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|destination|dir|domain|feed|file|file_name|folder|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|page|path|port|redir|redirect|redirect_to|uri|URI|Uri|reference|return|returnTo|return_path|return_to|rt|show|site|target|to|url|val|validate|view|window)=)(.*)(?=&)'
+regexMultipleParams = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|destination|dir|domain|feed|file|file_name|folder|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|page|path|port|redir|redirect|redirect_to|uri|URI|Uri|reference|return|returnTo|return_path|return_to|show|site|target|to|url|val|validate|view|window)=)(.*)(?=&)'
 
-regexSingleParam = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|destination|dir|domain|feed|file|file_name|folder|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|page|path|port|redir|redirect|redirect_to|uri|URI|Uri|reference|return|returnTo|return_path|return_to|rt|show|site|target|to|url|val|validate|view|window)=)(.*)'
+regexSingleParam = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|destination|dir|domain|feed|file|file_name|folder|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|page|path|port|redir|redirect|redirect_to|uri|URI|Uri|reference|return|returnTo|return_path|return_to|show|site|target|to|url|val|validate|view|window)=)(.*)'
 
 if args.output:
     output = open(args.output, "w")
@@ -66,8 +66,8 @@ def generate_payloads(whitelistedHost):
     return generated
 
 def fuzz_open_redirect(url, payloadsList = payloads):
-    matching = regex.search(regexSingleParam, url, regex.IGNORECASE)
-    matchedElem = matching if matching else regex.search(regexMultipleParams, url, regex.IGNORECASE)
+    matching = regex.search(regexMultipleParams, url, regex.IGNORECASE)
+    matchedElem = matching if matching else regex.search(regexSingleParam, url, regex.IGNORECASE)
     if not matchedElem:
         return
     matchedElem = matchedElem.group()
