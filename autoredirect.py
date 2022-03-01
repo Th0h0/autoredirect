@@ -79,9 +79,14 @@ def fuzz_open_redirect(url, payloadsList = payloads):
     replacedURL = regex.sub(regexMultipleParams, FUZZ_PLACE_HOLDER, url, flags=regex.IGNORECASE)
     if replacedURL == url: #If no match with multiparam regex
         replacedURL = regex.sub(regexSingleParam, FUZZ_PLACE_HOLDER, url, flags=regex.IGNORECASE)
-        matchedElem = regex.search(regexSingleParam, url, regex.IGNORECASE).group()
+        matchedElem = regex.search(regexSingleParam, url, regex.IGNORECASE)
     else:
-        matchedElem = regex.search(regexMultipleParams, url, regex.IGNORECASE).group()
+        matchedElem = regex.search(regexMultipleParams, url, regex.IGNORECASE)
+
+    if matchedElem:
+        matchedElem = matchedElem.group()
+    else: #No relevant matching, skipping ...
+        return
 
     if args.smart:
         host = smart_extract_host(url, matchedElem)
