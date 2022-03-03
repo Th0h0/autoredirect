@@ -74,7 +74,7 @@ def generate_payloads(whitelistedHost):
     ]
     return generated
 
-def fuzz_open_redirect(url, payloadsList = payloads):
+def prepare_url_with_regex(url):
 
     replacedURL = regex.sub(regexMultipleParams, FUZZ_PLACE_HOLDER, url, flags=regex.IGNORECASE)
     if replacedURL == url: #If no match with multiparam regex
@@ -85,7 +85,14 @@ def fuzz_open_redirect(url, payloadsList = payloads):
 
     if matchedElem:
         matchedElem = matchedElem.group()
-    else: #No relevant matching, skipping ...
+
+    return replacedURL, matchedElem
+
+def fuzz_open_redirect(url, payloadsList = payloads):
+
+    replacedURL, matchedElem = prepare_url_with_regex(url)
+
+    if not matchedElem: #No relevant parameter matching
         return
 
     if args.smart:
