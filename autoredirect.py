@@ -1,6 +1,7 @@
 import regex
 import argparse
 import requests
+import os
 
 CANARY_TEXT = 'CANARY049'
 CANARY_DOMAIN = 'canaryredirect.fr'
@@ -23,7 +24,8 @@ if not (args.file or args.url):
 if args.smart and args.oneshot:
     parser.error('Incompatible modes chosen : oneshot mode implies that only one payload is used.')
 
-defaultPayloadFile = open("default-payloads.txt", "r")
+currentPath = os.path.dirname(__file__)
+defaultPayloadFile = open(f"{currentPath}/default-payloads.txt", "r")
 
 if args.oneshot:
     payloads = [f"http://{CANARY_DOMAIN}"]
@@ -37,7 +39,7 @@ regexSingleParam = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|desti
 if args.output:
     output = open(args.output, "w")
 else:
-    output = open("open-redirect-output.txt", "w")
+    output = open(f"{currentPath}/open-redirect-output.txt", "w")
 
 def exception_verbose_message(exceptionType):
     if args.verbose:
