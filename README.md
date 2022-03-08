@@ -27,16 +27,20 @@ python3 autoredirect.py -h
 This displays help for the tool.
 
 ```
-usage: autoredirect.py [-h] [--file FILE] [--url URL] [--verbose] [--smart]
-                       [--output]
+usage: autoredirect.py [-h] [--file FILE] [--url URL] [--threads THREADS]
+                       [--verbose] [--smart] [--oneshot] [--output]
 
 options:
   -h, --help            show this help message and exit
   --file FILE, -f FILE  file of all URLs to be tested against Open Redirect
-  --url URL, -u URL     url to be tested against Open Redirect.
+  --url URL, -u URL     url to be tested against Open Redirect
+  --threads THREADS, -n THREADS
+                        number of threads for the tool
   --verbose, -v         activate verbose mode for the tool
   --smart, -s           activate context-based payload generation for each
                         tested URL
+  --oneshot, -t         fuzz with only one basic payload - to be activated in
+                        case of time constraints
   --output, -o          output file path
 ```
 
