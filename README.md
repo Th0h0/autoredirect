@@ -50,10 +50,10 @@ Single URL target:
 python3 autoredirect.py -u https://www.host.com/?param1=X&param2=Y&param2=Z
 ```
 
-Multiple URLs target with smart mode: 
+Multiple URLs target with smart mode and five threads: 
 
 ```bash
-python3 autoredirect.py -f urls.txt -s
+python3 autoredirect.py -f urls.txt -s -n 5
 ```
 
 ---
