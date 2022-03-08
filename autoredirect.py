@@ -2,15 +2,22 @@ import regex
 import argparse
 import requests
 import os
+import threading
+
+
+currentPath = os.path.dirname(__file__)
+os.chdir(currentPath)
 
 CANARY_TEXT = 'CANARY049'
 CANARY_DOMAIN = 'canaryredirect.fr'
 FUZZ_PLACE_HOLDER = '??????'
 TIMEOUT_DELAY = 1.75
+LOCK = threading.Lock()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--file", "-f", type=str, required=False, help= 'file of all URLs to be tested against Open Redirect')
-parser.add_argument("--url", "-u", type=str, required=False, help= 'url to be tested against Open Redirect.')
+parser.add_argument("--url", "-u", type=str, required=False, help= 'url to be tested against Open Redirect')
+parser.add_argument("--threads", "-n", type=int, required=False, help= 'number of threads for the tool')
 parser.add_argument("--verbose", "-v", action='store_true', help='activate verbose mode for the tool')
 parser.add_argument("--smart", "-s", action='store_true', help='activate context-based payload generation for each tested URL')
 parser.add_argument("--oneshot", "-t", action='store_true', help='fuzz with only one basic payload - to be activated in case of time constraints')
@@ -24,13 +31,16 @@ if not (args.file or args.url):
 if args.smart and args.oneshot:
     parser.error('Incompatible modes chosen : oneshot mode implies that only one payload is used.')
 
-currentPath = os.path.dirname(__file__)
-defaultPayloadFile = open(f"{currentPath}/default-payloads.txt", "r")
+defaultPayloadFile = open("default-payloads.txt", "r")
 
 if args.oneshot:
     payloads = [f"http://{CANARY_DOMAIN}"]
 else:
     payloads = [payload.replace('\n', '') for payload in defaultPayloadFile]
+
+
+if args.file :
+    allURLs = [line.replace('\n','') for line in open(args.file, "r")]
 
 regexMultipleParams = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|destination|dir|domain|feed|file|file_name|folder|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|page|path|port|redir|redirect|redirect_to|uri|URI|Uri|reference|return|returnTo|return_path|return_to|show|site|target|to|url|val|validate|view|window)=)(.*)(?=&)'
 
@@ -39,7 +49,28 @@ regexSingleParam = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|desti
 if args.output:
     output = open(args.output, "w")
 else:
-    output = open(f"{currentPath}/open-redirect-output.txt", "w")
+    output = open("open-redirect-output.txt", "w")
+
+
+def splitURLS(threadsSize): #Multithreading
+
+    splitted = []
+    URLSsize = len(allURLs)
+    width = int(URLSsize/threadsSize)
+    if width == 0:
+        width = 1
+    endVal = 0
+    i = 0
+    while endVal != URLSsize:
+        if URLSsize <= i + 2 * width:
+            endVal = URLSsize
+        else:
+            endVal = i + width
+
+        splitted.append( allURLs[i : max(i + width, URLSsize)])
+        i += width
+
+    return splitted
 
 def exception_verbose_message(exceptionType):
     if args.verbose:
@@ -103,24 +134,40 @@ def fuzz_open_redirect(url, payloadsList = payloads):
 
 
     if args.verbose:
-        print(f" + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +")
+        if not args.threads:
+            print(f"+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +")
         print(f"Starting fuzzing {replacedURL}")
 
     for payload in payloadsList:
         if detected_vuln_with_payload(replacedURL, payload):
             print(f"Open Redirect detected in {replacedURL} with payload {payload}.")
-            output.write(f"Open Redirect detected in {replacedURL} with payload {payload}\n")
+            with LOCK:
+                output.write(f"Open Redirect detected in {replacedURL} with payload {payload}\n")
             return
     if args.verbose:
-        print("\nNothing detected for the given URL.\n")
+        print(f"\nNothing detected for {replacedURL}\n")
 
 def detected_vuln_with_payload(url, payload):
     fuzzedUrl = url.replace(FUZZ_PLACE_HOLDER, payload)
 
     if args.verbose:
-        print(f"Testing payload: {payload}                                                          ", end="\r")
+        if not args.threads:
+            print(f"Testing payload: {payload}                                                          ", end="\r")
     response = requests.get(fuzzedUrl, timeout=TIMEOUT_DELAY)
     return (CANARY_TEXT in response.text)
+
+
+def sequential_url_scan(urlList):
+
+    for url in urlList:
+        try:
+            fuzz_open_redirect(url)
+        except requests.exceptions.Timeout:
+            exception_verbose_message("timeout")
+        except requests.exceptions.TooManyRedirects:
+            exception_verbose_message("redirects")
+        except requests.exceptions.RequestException:
+            exception_verbose_message("others")
 
 def main():
     if args.url:
@@ -130,17 +177,19 @@ def main():
             print("\nInvalid URL")
     elif args.file:
 
-        targetURLS = open(args.file, "r")
+        if not args.threads or args.threads == 1:
+            sequential_url_scan(allURLs)
 
-        for url in targetURLS:
-            try:
-                fuzz_open_redirect(url)
-            except requests.exceptions.Timeout:
-                exception_verbose_message("timeout")
-            except requests.exceptions.TooManyRedirects:
-                exception_verbose_message("redirects")
-            except requests.exceptions.RequestException:
-                exception_verbose_message("others")
+        else:
+            workingThreads = []
+            split = splitURLS(args.threads)
+            for subList in split:
+                t = threading.Thread(target=sequential_url_scan, args=[subList])
+                t.start()
+                workingThreads.append(t)
+            for thread in workingThreads:
+                thread.join()
 
-        targetURLS.close()
-main()
+
+if __name__ == '__main__':
+    main()
