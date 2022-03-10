@@ -67,7 +67,7 @@ def splitURLS(threadsSize): #Multithreading
         else:
             endVal = i + width
 
-        splitted.append( allURLs[i : max(i + width, URLSsize)])
+        splitted.append( allURLs[i : endVal])
         i += width
 
     return splitted
