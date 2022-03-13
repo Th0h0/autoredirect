@@ -63,11 +63,14 @@ def splitURLS(threadsSize): #Multithreading
     i = 0
     while endVal != URLSsize:
         if URLSsize <= i + 2 * width:
-            endVal = URLSsize
+            if len(splitted) == threadsSize - 2:
+                endVal = int(i + (URLSsize - i)/2)
+            else:
+                endVal = URLSsize
         else:
             endVal = i + width
 
-        splitted.append( allURLs[i : endVal])
+        splitted.append(allURLs[i: endVal])
         i += width
 
     return splitted
@@ -189,6 +192,7 @@ def main():
                 workingThreads.append(t)
             for thread in workingThreads:
                 thread.join()
+    output.close()
 
 
 if __name__ == '__main__':
