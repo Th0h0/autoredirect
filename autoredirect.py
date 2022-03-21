@@ -6,7 +6,6 @@ import threading
 
 
 currentPath = os.path.dirname(__file__)
-os.chdir(currentPath)
 
 CANARY_TEXT = 'CANARY049'
 CANARY_DOMAIN = 'canaryredirect.fr'
@@ -31,7 +30,7 @@ if not (args.file or args.url):
 if args.smart and args.oneshot:
     parser.error('Incompatible modes chosen : oneshot mode implies that only one payload is used.')
 
-defaultPayloadFile = open("default-payloads.txt", "r")
+defaultPayloadFile = open(f"{currentPath}/default-payloads.txt", "r")
 
 if args.oneshot:
     payloads = [f"http://{CANARY_DOMAIN}"]
