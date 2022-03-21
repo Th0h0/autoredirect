@@ -41,9 +41,7 @@ else:
 if args.file :
     allURLs = [line.replace('\n','') for line in open(args.file, "r")]
 
-regexMultipleParams = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|destination|dir|domain|feed|file|file_name|folder|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|page|path|port|redir|redirect|redirect_to|uri|URI|Uri|reference|return|returnTo|return_path|return_to|show|site|target|to|url|val|validate|view|window)=)(.*)(?=&)'
-
-regexSingleParam = '(?<=(Url|URL|Open|callback|checkout|continue|data|dest|destination|dir|domain|feed|file|file_name|folder|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|page|path|port|redir|redirect|redirect_to|uri|URI|Uri|reference|return|returnTo|return_path|return_to|show|site|target|to|url|val|validate|view|window)=)(.*)'
+regexParams = regex.compile('(?<=(Url|URL|Open|callback|continue|data|dest|destination|dir|domain|file|file_name|forward|go|goto|host|html|load_file|login\?to|logout|navigation|next|next_page|out|path|redir|redirect|redirect_to|uri|URI|Uri|return|returnTo|return_path|return_to|target|url)=)(.*)(?=(&|$))', flags=regex.IGNORECASE)
 
 if args.output:
     output = open(args.output, "w")
@@ -111,12 +109,8 @@ def generate_payloads(whitelistedHost):
 
 def prepare_url_with_regex(url):
 
-    replacedURL = regex.sub(regexMultipleParams, FUZZ_PLACE_HOLDER, url, flags=regex.IGNORECASE)
-    if replacedURL == url: #If no match with multiparam regex
-        replacedURL = regex.sub(regexSingleParam, FUZZ_PLACE_HOLDER, url, flags=regex.IGNORECASE)
-        matchedElem = regex.search(regexSingleParam, url, regex.IGNORECASE)
-    else:
-        matchedElem = regex.search(regexMultipleParams, url, regex.IGNORECASE)
+    replacedURL = regexParams.sub(FUZZ_PLACE_HOLDER, url)
+    matchedElem = regexParams.search(url)
 
     if matchedElem:
         matchedElem = matchedElem.group()
